@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	WITHDWAWL = "Withdrawal"
-	SET_ACC   = "SetAccount"
+	WITHDRAWAL = "Withdrawal"
+	SetAcc     = "SetAccount"
 )
 
 var (
@@ -124,7 +124,7 @@ func main() {
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCallback(callbackquery.Prefix("withdraw"), withdrawal)},
 		map[string][]ext.Handler{
-			WITHDWAWL: {handlers.NewMessage(onlyFloat64, withdrawalAsk)},
+			WITHDRAWAL: {handlers.NewMessage(onlyFloat64, withdrawalAsk)},
 		},
 		&handlers.ConversationOpts{
 			Exits:        []ext.Handler{handlers.NewCommand("cancel", cancel)},
@@ -136,7 +136,7 @@ func main() {
 	dispatcher.AddHandler(handlers.NewConversation(
 		[]ext.Handler{handlers.NewCallback(callbackquery.Prefix("setAccNo"), setAccNo)},
 		map[string][]ext.Handler{
-			SET_ACC: {handlers.NewMessage(onlyInt64, setAccAsk)},
+			SetAcc: {handlers.NewMessage(onlyInt64, setAccAsk)},
 		},
 		&handlers.ConversationOpts{
 			Exits:        []ext.Handler{handlers.NewCommand("cancel", cancel)},
@@ -159,10 +159,14 @@ func main() {
 			panic("failed to set webhook: " + err.Error())
 		}
 
-		updater.StartWebhook(bot, token, ext.WebhookOpts{
+		err = updater.StartWebhook(bot, token, ext.WebhookOpts{
 			ListenAddr:  "0.0.0.0:" + Port,
 			SecretToken: secretToken,
 		})
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
 	} else {
 		err = updater.StartPolling(bot, &ext.PollingOpts{
 			DropPendingUpdates: true,
@@ -742,8 +746,8 @@ func broadcast(b *gotgbot.Bot, ctx *ext.Context) error {
 
 	successfulBroadcasts := 0
 	for _, u := range users {
-		user_id := u.ID
-		_, err = b.CopyMessage(user_id, ctx.EffectiveMessage.Chat.Id, reply.MessageId, &gotgbot.CopyMessageOpts{ReplyMarkup: button})
+		userId := u.ID
+		_, err = b.CopyMessage(userId, ctx.EffectiveMessage.Chat.Id, reply.MessageId, &gotgbot.CopyMessageOpts{ReplyMarkup: button})
 
 		if err == nil {
 			successfulBroadcasts++
@@ -816,7 +820,7 @@ func setAccNo(b *gotgbot.Bot, ctx *ext.Context) error {
 		return handlers.EndConversation()
 	}
 
-	return handlers.NextConversationState(SET_ACC)
+	return handlers.NextConversationState(SetAcc)
 }
 
 func setAccAsk(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -901,7 +905,7 @@ func withdrawal(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	// Proceed to the next conversation state
-	return handlers.NextConversationState(WITHDWAWL)
+	return handlers.NextConversationState(WITHDRAWAL)
 }
 
 func withdrawalAsk(b *gotgbot.Bot, ctx *ext.Context) error {
@@ -913,7 +917,7 @@ func withdrawalAsk(b *gotgbot.Bot, ctx *ext.Context) error {
 	amount, err := strconv.ParseFloat(text, 64)
 	if err != nil {
 		_, _ = msg.Reply(b, "❌ Oops! Invalid amount. Please enter a valid number to withdraw. 💸", nil)
-		return handlers.NextConversationState(WITHDWAWL)
+		return handlers.NextConversationState(WITHDRAWAL)
 	}
 
 	// Get user data
@@ -926,7 +930,7 @@ func withdrawalAsk(b *gotgbot.Bot, ctx *ext.Context) error {
 	// Check if the user has sufficient balance
 	if amount > userInfo.Balance {
 		_, _ = msg.Reply(b, "❌ Insufficient balance. 💳 Please try again with a valid amount.", nil)
-		return handlers.NextConversationState(WITHDWAWL)
+		return handlers.NextConversationState(WITHDRAWAL)
 	}
 
 	// Remove balance from user account
