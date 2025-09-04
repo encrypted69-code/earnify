@@ -409,13 +409,14 @@ func info(b *gotgbot.Bot, ctx *ext.Context) error {
 	}
 
 	response := fmt.Sprintf(
-		"👤 <b>User Information</b>\n\n"+
-			"🔹 <b>User ID:</b> %d\n"+
-			"🔗 <b>Referrer ID:</b> %d\n"+
-			"🤝 <b>Referred Users:</b> %d\n"+
-			"💰 <b>Account Balance:</b> %.2f\n"+
-			"<b>Account Number</b> %d",
-		userInfo.ID, userInfo.Referrer, len(userInfo.ReferredUsers), userInfo.Balance, userInfo.AccNo)
+    "💸 <b>Per refer: .50 INR</b>\n\n"+
+    "👤 <b>User Information</b>\n\n"+
+    "🔹 <b>User ID:</b> %d\n"+
+    "🔗 <b>Referrer ID:</b> %d\n"+
+    "🤝 <b>Referred Users:</b> %d\n"+
+    "💰 <b>Account Balance:</b> %.2f\n"+
+    "<b>Account Number</b> %d",
+    userInfo.ID, userInfo.Referrer, len(userInfo.ReferredUsers), userInfo.Balance, userInfo.AccNo)
 
 	_, _ = msg.Reply(b, response, &gotgbot.SendMessageOpts{
 		ParseMode: "HTML",
@@ -515,7 +516,7 @@ func walletCallback(b *gotgbot.Bot, ctx *ext.Context) error {
 		InlineKeyboard: [][]gotgbot.InlineKeyboardButton{
 			{
 				{
-					Text:         "🆔 Set Account Number",
+					Text:         "🆔 Set UPI ID",
 					CallbackData: fmt.Sprintf("setAccNo.%d", userInfo.ID),
 				},
 			},
